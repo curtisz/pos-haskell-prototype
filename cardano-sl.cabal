@@ -60,6 +60,7 @@ library
                         Pos.Ssc.Class.LocalData
                         Pos.State
                         Pos.State.Acidic
+                        Pos.State.Modern
                         Pos.State.State
                         Pos.State.Storage
                         Pos.State.Storage.Block
@@ -192,6 +193,7 @@ library
                       , parsec
                       , pvss
                       , resourcet
+                      , rocksdb
                       , quickcheck-instances
                       , random
                       , safecopy
@@ -416,6 +418,27 @@ executable cardano-smart-generator
 
   if flag(with-wallet)
     cpp-options: -DWITH_WALLET
+
+executable cardano-tmp
+  hs-source-dirs:      src/tmp
+  main-is:             Main.hs
+  build-depends:       base
+                     , cardano-sl
+                     , resourcet
+                     , universum >= 0.1.11
+  default-language:    Haskell2010
+  ghc-options:         -threaded -rtsopts
+                       -Wall
+                       -fno-warn-orphans
+                       -with-rtsopts=-N
+                       -O2
+  default-extensions:   DeriveDataTypeable
+                        DeriveGeneric
+                        GeneralizedNewtypeDeriving
+                        NoImplicitPrelude
+                        OverloadedStrings
+                        RecordWildCards
+                        TypeApplications
 
 executable cardano-web-docs
   hs-source-dirs:      src/web-docs
