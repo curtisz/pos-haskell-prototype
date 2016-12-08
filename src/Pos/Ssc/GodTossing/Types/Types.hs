@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE TemplateHaskell     #-}
@@ -24,6 +25,8 @@ module Pos.Ssc.GodTossing.Types.Types
        , mkGtProof
        , createGtContext
        , _gpCertificates
+
+       , SscBi
        ) where
 
 import           Control.Concurrent.STM                  (newTVarIO)
@@ -53,6 +56,7 @@ import           Pos.Ssc.GodTossing.Types.Base           (Commitment, Commitment
 ----------------------------------------------------------------------------
 -- SscGlobalState
 ----------------------------------------------------------------------------
+
 -- | MPC-related content of main body.
 data GtGlobalState = GtGlobalState
     { -- | Commitments are added during the first phase of epoch.
@@ -105,6 +109,7 @@ instance Buildable GtGlobalState where
 ----------------------------------------------------------------------------
 -- SscPayload
 ----------------------------------------------------------------------------
+
 -- | Block payload
 data GtPayload
     = CommitmentsPayload  !CommitmentsMap !VssCertificatesMap
@@ -165,6 +170,7 @@ instance Buildable GtPayload where
 ----------------------------------------------------------------------------
 -- SscProof
 ----------------------------------------------------------------------------
+
 -- | Proof of MpcData.
 -- We can use ADS for commitments, openings, shares as well,
 -- if we find it necessary.
@@ -224,3 +230,14 @@ createGtContext GtParams {..} = mkAcquire
     (closeSecretStorage . gtcSecretStorage)
   where
     secretPath = (</> "secret") <$> gtpDbPath
+
+----------------------------------------------------------------------------
+-- Convinient binary type alias
+----------------------------------------------------------------------------
+
+type SscBi =
+    ( Bi GtProof
+    , Bi GtPayload
+    , Bi Opening
+    , Bi VssCertificate
+    , Bi Commitment)

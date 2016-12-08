@@ -1,4 +1,7 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ConstraintKinds      #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | This module defines instance of Ssc for SscGodTossing.
 
@@ -9,7 +12,6 @@ module Pos.Ssc.GodTossing.Types.Instance
 
 import           Data.Tagged                        (Tagged (..))
 
-import           Pos.Binary.Class                   ()
 import           Pos.Binary.Types                   ()
 import           Pos.Ssc.Class.Helpers              (SscHelpersClass (..))
 import           Pos.Ssc.Class.Types                (Ssc (..))
@@ -19,10 +21,11 @@ import           Pos.Ssc.GodTossing.LocalData.Types (GtLocalData)
 import           Pos.Ssc.GodTossing.Storage.Types   (GtStorage)
 import           Pos.Ssc.GodTossing.Types.Type      (SscGodTossing)
 import           Pos.Ssc.GodTossing.Types.Types     (GtContext, GtGlobalState, GtParams,
-                                                     GtPayload, GtProof, createGtContext,
-                                                     mkGtProof)
+                                                     GtPayload, GtProof, SscBi,
+                                                     createGtContext, mkGtProof)
 
-instance Ssc SscGodTossing where
+
+instance SscBi => Ssc SscGodTossing where
     type SscStorage     SscGodTossing = GtStorage
     type SscLocalData   SscGodTossing = GtLocalData
     type SscPayload     SscGodTossing = GtPayload
@@ -35,5 +38,5 @@ instance Ssc SscGodTossing where
     sscFilterPayload = filterLocalPayload
     sscCreateNodeContext = createGtContext
 
-instance SscHelpersClass SscGodTossing where
+instance SscBi => SscHelpersClass SscGodTossing where
     sscVerifyPayload = Tagged verifyGtPayload
