@@ -11,7 +11,7 @@ import           Universum
 import           Pos.Binary.Class   (Bi (..))
 import           Pos.Types.Address  (Address (..))
 
--- Yes, i'm not joking. Address is something that essentially is
+-- Yes, I'm not joking. Address is something that essentially is
 -- serialized to exist, so putting (Bi Address) => constraint
 -- everywhere appeared too tedious for me, so there'll be just a
 -- module here.

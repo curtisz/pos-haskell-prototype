@@ -21,7 +21,10 @@ import           Data.Binary.Get      (ByteOffset, getWord8, runGet, runGetOrFai
 import           Data.Binary.Put      (putWord8, runPut)
 import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as BSL
+import           Data.Hashable        (Hashable (..))
+import qualified Data.HashMap.Strict  as HM
 import qualified Data.List.NonEmpty   as NE
+import           Data.Word            (Word32)
 import           Universum
 --import qualified Data.Binary as B
 
@@ -128,11 +131,36 @@ instance Bi Int where
     {-# INLINE get #-}
     get = Binary.get
 
+instance Bi Integer where
+    {-# INLINE put #-}
+    put = Binary.put
+    {-# INLINE get #-}
+    get = Binary.get
+
+instance Bi Word32 where
+    {-# INLINE put #-}
+    put = Binary.put
+    {-# INLINE get #-}
+    get = Binary.get
+
 instance (Bi a, Bi b) => Bi (a, b) where
     {-# INLINE put #-}
     put (a, b) = put a <> put b
     {-# INLINE get #-}
     get = liftM2 (,) get get
+
+instance (Bi a, Bi b, Bi c) => Bi (a, b, c) where
+    {-# INLINE put #-}
+    put (a, b, c) = put a <> put b <> put c
+    {-# INLINE get #-}
+    get = liftM3 (,,) get get get
+
+instance (Bi a, Bi b, Bi c, Bi d) => Bi (a, b, c, d) where
+    {-# INLINE put #-}
+    put (a, b, c, d) = put a <> put b <> put c <> put d
+    {-# INLINE get #-}
+    get = liftM4 (,,,) get get get get
+
 
 -- TODO Optimize by using varint instead of int
 instance Bi a => Bi [a] where
@@ -161,8 +189,16 @@ instance (Bi a, Bi b) => Bi (Either a b) where
             _ -> liftM Right get
 
 instance Bi a => Bi (NE.NonEmpty a) where
-  get = fmap NE.fromList get
-  put = put . NE.toList
+    get = fmap NE.fromList get
+    put = put . NE.toList
+
+instance  (Hashable k, Eq k, Bi k, Bi v) => Bi (HM.HashMap k v) where
+    get = fmap HM.fromList get
+    put = put . HM.toList
+
+instance Bi Text where
+    put = Binary.put
+    get = Binary.get
 
 ----------------------------------------------------------------------------
 -- Deserialized wrapper

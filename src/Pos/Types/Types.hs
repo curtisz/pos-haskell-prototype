@@ -60,6 +60,7 @@ module Pos.Types.Types
 
        , MainBlockchain
        , MainBlockHeader
+       , BiSsc
        , ChainDifficulty (..)
        , MainToSign
        , MainBlock

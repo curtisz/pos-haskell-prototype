@@ -22,6 +22,8 @@ instance Bi a => Bi (MerkleNode a) where
         MerkleBranch{..} -> putWord8 0 >> put mLeft >> put mRight
         MerkleLeaf{..}   -> putWord8 1 >> put mVal
 
-instance Bi a => Bi (MerkleTree a) where
+-- TODO
+--instance Bi a => Bi (MerkleTree a) where
+instance Bi (MerkleTree a) where
     get = notImplemented
     put = notImplemented

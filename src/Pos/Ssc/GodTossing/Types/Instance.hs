@@ -9,6 +9,8 @@ module Pos.Ssc.GodTossing.Types.Instance
 
 import           Data.Tagged                        (Tagged (..))
 
+import           Pos.Binary.Class                   ()
+import           Pos.Binary.Types                   ()
 import           Pos.Ssc.Class.Helpers              (SscHelpersClass (..))
 import           Pos.Ssc.Class.Types                (Ssc (..))
 import           Pos.Ssc.GodTossing.Error           (SeedError)
