@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
 
@@ -24,11 +25,11 @@ module Pos.Ssc.GodTossing.Types.Types
        , createGtContext
        , _gpCertificates
        ) where
+
 import           Control.Concurrent.STM                  (newTVarIO)
 import qualified Control.Concurrent.STM                  as STM
 import           Control.Lens                            (makeLenses)
 import           Data.Acquire                            (Acquire, mkAcquire)
-import           Data.Binary                             (Binary)
 import qualified Data.HashMap.Strict                     as HM
 import           Data.SafeCopy                           (base, deriveSafeCopySimple)
 import qualified Data.Text                               as T
@@ -39,13 +40,16 @@ import           Serokell.Util                           (listJson)
 import           System.FilePath                         ((</>))
 import           Universum
 
+import           Pos.Binary.Class                        (Bi)
 import           Pos.Crypto                              (Hash, VssKeyPair, hash)
 import           Pos.Ssc.GodTossing.SecretStorage.Acidic (SecretStorage,
                                                           closeSecretStorage,
                                                           openGtSecretStorage,
                                                           openMemGtSecretStorage)
-import           Pos.Ssc.GodTossing.Types.Base           (CommitmentsMap, OpeningsMap,
-                                                          SharesMap, VssCertificatesMap)
+import           Pos.Ssc.GodTossing.Types.Base           (Commitment, CommitmentsMap,
+                                                          Opening, OpeningsMap, SharesMap,
+                                                          VssCertificate,
+                                                          VssCertificatesMap)
 ----------------------------------------------------------------------------
 -- SscGlobalState
 ----------------------------------------------------------------------------
@@ -64,8 +68,6 @@ data GtGlobalState = GtGlobalState
 
 deriveSafeCopySimple 0 'base ''GtGlobalState
 makeLenses ''GtGlobalState
-
-instance Binary GtGlobalState
 
 instance Buildable GtGlobalState where
     build GtGlobalState {..} =
@@ -118,8 +120,6 @@ _gpCertificates (SharesPayload _ certs)      = certs
 _gpCertificates (CertificatesPayload certs)  = certs
 
 deriveSafeCopySimple 0 'base ''GtPayload
-
-instance Binary GtPayload
 
 isEmptyGtPayload :: GtPayload -> Bool
 isEmptyGtPayload (CommitmentsPayload comms certs) = null comms && null certs
@@ -177,10 +177,10 @@ data GtProof
 
 deriveSafeCopySimple 0 'base ''GtProof
 
-instance Binary GtProof
-
 -- | Smart constructor for 'GtProof' from 'GtPayload'.
-mkGtProof :: GtPayload -> GtProof
+mkGtProof
+    :: (Bi VssCertificate, Bi Commitment, Bi Opening)
+    => GtPayload -> GtProof
 mkGtProof payload =
     case payload of
         CommitmentsPayload comms certs ->

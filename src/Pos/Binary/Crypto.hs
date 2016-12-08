@@ -25,10 +25,11 @@ import           Pos.Binary.Class         (Bi (..), Serialized (..), decodeFull,
 import           Pos.Crypto.Hashing       (AbstractHash (..), Hash, HashAlgorithm,
                                            WithHash (..), withHash)
 import           Pos.Crypto.SecretSharing (EncShare (..), Secret (..), SecretProof (..),
-                                           Share (..), VssPublicKey (..))
+                                           SecretSharingExtra (..), Share (..),
+                                           VssPublicKey (..))
 import           Pos.Crypto.SerTypes      (LEncShare (..), LSecret (..),
-                                           LSecretProof (..), LShare (..),
-                                           LVssPublicKey (..))
+                                           LSecretProof (..), LSecretSharingExtra (..),
+                                           LShare (..), LVssPublicKey (..))
 import           Pos.Crypto.Signing       (PublicKey (..), SecretKey (..), Signature (..),
                                            publicKeyLength, putAssertLength,
                                            secretKeyLength, signatureLength)
@@ -96,6 +97,11 @@ instance Bi Pvss.Proof where
     put = Binary.put
     get = Binary.get
 deriving instance Bi SecretProof
+
+instance Binary.Binary SecretSharingExtra
+instance Bi SecretSharingExtra where
+    put = Binary.put
+    get = Binary.get
 
 ----------------------------------------------------------------------------
 -- SerTypes
@@ -167,6 +173,13 @@ instance Serialized SecretProof LSecretProof where
     serialize =
         LSecretProof . LBS.toStrict . checkLen "serialize" "LSecretProof" 64 . encode
     deserialize = decodeFull . checkLen "deserialize" "LSecretProof" 64 . encode
+
+deriving instance Bi LSecretSharingExtra
+
+instance Serialized SecretSharingExtra LSecretSharingExtra where
+    serialize = LSecretSharingExtra . encode
+    deserialize (LSecretSharingExtra x) = decodeFull x
+
 
 ----------------------------------------------------------------------------
 -- Signing

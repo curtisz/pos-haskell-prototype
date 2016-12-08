@@ -18,7 +18,6 @@ module Pos.Ssc.NistBeacon
 
 import           Crypto.Hash             (SHA256)
 import qualified Crypto.Hash             as Hash
-import qualified Data.Binary             as Binary
 import qualified Data.ByteArray          as ByteArray (convert)
 import           Data.Coerce             (coerce)
 import qualified Data.HashMap.Strict     as HM
@@ -29,6 +28,7 @@ import           Data.Text.Buildable     (Buildable (build))
 import           Serokell.Util.Verify    (VerificationRes (..))
 import           Universum
 
+import           Pos.Binary.Class        (Bi (encode))
 import           Pos.Crypto              (Threshold, deterministicVssKeyGen,
                                           toVssPublicKey)
 import           Pos.FollowTheSatoshi    (followTheSatoshi)
@@ -97,7 +97,7 @@ calculateLeaders
     -> Query (Either () SlotLeaders)
 calculateLeaders epoch utxo _ = do
     let seed = coerce . ByteArray.convert @_ @ByteString .
-               Hash.hashlazy @SHA256 . Binary.encode $ epoch
+               Hash.hashlazy @SHA256 . encode $ epoch
     return $ Right $ followTheSatoshi seed utxo
 
 instance SscWorkersClass SscNistBeacon where

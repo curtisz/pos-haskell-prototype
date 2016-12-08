@@ -107,6 +107,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 -}
 
+instance Bi () where
+    put ()  = mempty
+    get     = return ()
+
 instance Bi BS.ByteString where
     {-# INLINE put #-}
     put = Binary.put
@@ -205,8 +209,8 @@ instance Bi Text where
 ----------------------------------------------------------------------------
 
 class Bi b => Serialized a b where
-  serialize :: a -> b
-  deserialize :: b -> Either [Char] a
+    serialize :: a -> b
+    deserialize :: b -> Either [Char] a
 
 deserializeM :: (Serialized a b, MonadFail m) => b -> m a
 deserializeM = either fail return . deserialize

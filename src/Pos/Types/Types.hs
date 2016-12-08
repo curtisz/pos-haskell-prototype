@@ -141,8 +141,8 @@ import           Serokell.Util.Text     (listJson, listJsonIndent, mapBuilderJso
                                          pairBuilder)
 import           Universum
 
-import           Pos.Binary             (Bi)
 import           Pos.Binary.Address     ()
+import           Pos.Binary.Class       (Bi)
 import           Pos.Constants          (sharedSeedLength)
 import           Pos.Crypto             (Hash, PublicKey, Signature, hash, hashHexF,
                                          shortHashF)
