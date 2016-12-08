@@ -9,12 +9,9 @@ module Pos.Types.Address
        ) where
 
 import           Control.Lens           (view, _3)
-import           Control.Monad.Fail     (fail)
 import           Crypto.Hash            (Blake2s_224, Digest, SHA3_256, hashlazy)
 import qualified Crypto.Hash            as CryptoHash
 import           Data.Aeson             (ToJSON (toJSON))
-import qualified Data.Binary.Get        (getWord32be)
-import qualified Data.Binary.Put        (putWord32be)
 import           Data.ByteString.Base58 (Alphabet (..), bitcoinAlphabet, decodeBase58,
                                          encodeBase58)
 import qualified Data.ByteString.Char8  as BSC (elem, unpack)

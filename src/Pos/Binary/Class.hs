@@ -17,10 +17,11 @@ module Pos.Binary.Class
 import           Control.Monad.Fail   (MonadFail, fail)
 import           Data.Binary          (Get, Put)
 import qualified Data.Binary          as Binary
-import           Data.Binary.Get      (ByteOffset, runGet, runGetOrFail)
-import           Data.Binary.Put      (runPut)
+import           Data.Binary.Get      (ByteOffset, getWord8, runGet, runGetOrFail)
+import           Data.Binary.Put      (putWord8, runPut)
 import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.List.NonEmpty   as NE
 import           Universum
 --import qualified Data.Binary as B
 
@@ -67,6 +68,41 @@ decodeFull bs = case (runGetOrFail get) bs of
 ----------------------------------------------------------------------------
 
 -- TODO get rid of boilerplate (or rewrite by hands to make it more clear)
+-- I just copied most of it from here:
+-- https://hackage.haskell.org/package/binary-0.8.4.1/docs/src/Data.Binary.Class.html#line-564
+
+{-
+Copyright (c) Lennart Kolmodin
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the author nor the names of his contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-}
 
 instance Bi BS.ByteString where
     {-# INLINE put #-}
@@ -86,11 +122,47 @@ instance Bi Int64 where
     {-# INLINE get #-}
     get = Binary.get
 
+instance Bi Int where
+    {-# INLINE put #-}
+    put = Binary.put
+    {-# INLINE get #-}
+    get = Binary.get
+
 instance (Bi a, Bi b) => Bi (a, b) where
     {-# INLINE put #-}
     put (a, b) = put a <> put b
     {-# INLINE get #-}
     get = liftM2 (,) get get
+
+-- TODO Optimize by using varint instead of int
+instance Bi a => Bi [a] where
+    put xs = put (length xs) <> mapM_ put xs
+    get = do n <- get :: Get Int
+             getMany n
+
+-- | 'getMany n' get 'n' elements in order, without blowing the stack.
+getMany :: Bi a => Int -> Get [a]
+getMany n = go [] n
+ where
+    go xs 0 = return $! reverse xs
+    go xs i = do x <- get
+                 -- we must seq x to avoid stack overflows due to laziness in
+                 -- (>>=)
+                 x `seq` go (x:xs) (i-1)
+{-# INLINE getMany #-}
+
+instance (Bi a, Bi b) => Bi (Either a b) where
+    put (Left  a) = putWord8 0 <> put a
+    put (Right b) = putWord8 1 <> put b
+    get = do
+        w <- getWord8
+        case w of
+            0 -> liftM Left  get
+            _ -> liftM Right get
+
+instance Bi a => Bi (NE.NonEmpty a) where
+  get = fmap NE.fromList get
+  put = put . NE.toList
 
 ----------------------------------------------------------------------------
 -- Deserialized wrapper
