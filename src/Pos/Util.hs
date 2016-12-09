@@ -52,6 +52,7 @@ module Pos.Util
        -- * LRU
        , clearLRU
 
+       , Lightweight (..)
        , Serialized (..)
        , deserializeM
 
@@ -358,13 +359,13 @@ getKeys = fromMap . void
 -- Deserialized wrapper
 ----------------------------------------------------------------------------
 
-class Binary b => Serialized a b where
-  serialize :: a -> b
-  deserialize :: b -> Either [Char] a
+newtype Lightweight a = Lightweight
+    { getLightweight :: ByteString
+    } deriving (Show, Eq)
 
-deserializeM :: (Serialized a b, MonadFail m) => b -> m a
+class Serialized a where
+  serialize :: a -> Lightweight a
+  deserialize :: Lightweight a -> Either [Char] a
+
+deserializeM :: (Serialized a, MonadFail m) => Lightweight a -> m a
 deserializeM = either fail return . deserialize
-
-instance (Serialized a c, Serialized b d) => Serialized (a, b) (c, d) where
-    serialize (a, b) = (serialize a, serialize b)
-    deserialize (c, d) = (,) <$> deserialize c <*> deserialize d
